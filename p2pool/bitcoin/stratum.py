@@ -13,26 +13,26 @@ class StratumRPCMiningProvider(object):
         self.wb = wb
         self.other = other
         self.transport = transport
-        
+
         self.username = None
         self.handler_map = expiring_dict.ExpiringDict(300)
-        
+
         self.watch_id = self.wb.new_work_event.watch(self._send_work)
-    
+
     def rpc_subscribe(self, miner_version=None, session_id=None):
         reactor.callLater(0, self._send_work)
-        
+
         return [
             ["mining.notify", "ae6812eb4cd7735a302a8a9dd95cf71f"], # subscription details
             "", # extranonce1
             self.wb.COINBASE_NONCE_LENGTH, # extranonce2_size
         ]
-    
+
     def rpc_authorize(self, username, password):
         self.username = username
-        
+
         reactor.callLater(0, self._send_work)
-    
+
     def _send_work(self):
         try:
             x, got_response = self.wb.get_work(*self.wb.preprocess_request('' if self.username is None else self.username))
@@ -54,10 +54,10 @@ class StratumRPCMiningProvider(object):
             True, # clean_jobs
         ).addErrback(lambda err: None)
         self.handler_map[jobid] = x, got_response
-    
+
     def rpc_submit(self, worker_name, job_id, extranonce2, ntime, nonce):
         if job_id not in self.handler_map:
-            print >>sys.stderr, '''Couldn't link returned work's job id with its handler. This should only happen if this process was recently restarted!'''
+            print('''Couldn't link returned work's job id with its handler. This should only happen if this process was recently restarted!''', file=sys.stderr)
             return False
         x, got_response = self.handler_map[job_id]
         coinb_nonce = extranonce2.decode('hex')
@@ -76,14 +76,14 @@ class StratumRPCMiningProvider(object):
         res = got_response(header, worker_name, coinb_nonce)
         if len(self.wb._inner.my_share_hashes) > 20:
             if float(len(self.wb._inner.my_doa_share_hashes)) / float(len(self.wb._inner.my_share_hashes)) > 0.60:
-               self.transport.loseConnection() 
+               self.transport.loseConnection()
 
         # Disconnect miners with large hash > target to prevent DoS
         if self.wb._inner.total_hashes > 20:
             if float(self.wb._inner.invalid_hashes) / float(self.wb._inner.total_hashes) > 0.05:
                 self.transport.loseConnection()
-        
-	return res
+
+        return res
 
     def close(self):
         self.wb.new_work_event.unwatch(self.watch_id)
@@ -91,12 +91,12 @@ class StratumRPCMiningProvider(object):
 class StratumProtocol(jsonrpc.LineBasedPeer):
     def connectionMade(self):
         self.svc_mining = StratumRPCMiningProvider(self.factory.wb, self.other, self.transport)
-    
+
     def connectionLost(self, reason):
         self.svc_mining.close()
 
 class StratumServerFactory(protocol.ServerFactory):
     protocol = StratumProtocol
-    
+
     def __init__(self, wb):
         self.wb = wb

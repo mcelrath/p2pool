@@ -80,7 +80,7 @@ In bash type this:
     SET VS90COMNTOOLS=%VS100COMNTOOLS%             # For visual c++ 2010
     cd litecoin_scrypt
     C:\Python27\python.exe setup.py build --compile=mingw32 install
-	
+
 If you run into an error with unrecognized command line option '-mno-cygwin', see this:
 http://stackoverflow.com/questions/6034390/compiling-with-cython-and-mingw-produces-gcc-error-unrecognized-command-line-o
 
@@ -103,10 +103,8 @@ Sponsors:
 Thanks to:
 * The Bitcoin Foundation for its generous support of P2Pool
 * The Litecoin Project for its generous donations to P2Pool
- 
+
 License:
 -------------------------
 
 [Available here](COPYING)
-
-

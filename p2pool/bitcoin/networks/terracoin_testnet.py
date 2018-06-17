@@ -7,13 +7,13 @@ from .. import data, helper
 from p2pool.util import pack
 
 
-P2P_PREFIX = '41babe56'.decode('hex')
+P2P_PREFIX = bytes.fromhex('41babe56')
 P2P_PORT = 23333
 ADDRESS_VERSION = 111
 RPC_PORT = 23332
 RPC_CHECK = defer.inlineCallbacks(lambda bitcoind: defer.returnValue(
             'terracoinaddress' in (yield bitcoind.rpc_help()) and
-            (yield bitcoind.rpc_getinfo())['testnet']
+            (yield bitcoind.rpc_getblockchaininfo())['chain'] == 'test'
         ))
 SUBSIDY_FUNC = lambda height: 20*100000000 >> (height + 1)//1050000
 POW_FUNC = data.hash256
