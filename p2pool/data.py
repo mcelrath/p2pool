@@ -61,7 +61,7 @@ def is_segwit_activated(version, net):
     segwit_activation_version = getattr(net, 'SEGWIT_ACTIVATION_VERSION', 0)
     return version >= segwit_activation_version and segwit_activation_version > 0
 
-DONATION_SCRIPT = b'4104ffd03de44a6e11b9917f3a29f9443283d9871c9d743ef30d5eddcd37094b64d1b3d8090496b53256786bf5c82932ec23c3b74d9f05a6f95a8b5529352656664bac'
+DONATION_SCRIPT = bytes.fromhex('4104ffd03de44a6e11b9917f3a29f9443283d9871c9d743ef30d5eddcd37094b64d1b3d8090496b53256786bf5c82932ec23c3b74d9f05a6f95a8b5529352656664bac')
 
 class BaseShare(object):
     VERSION = 0
@@ -82,7 +82,7 @@ class BaseShare(object):
     share_type = None
     ref_type = None
 
-    gentx_before_refhash = pack.VarStrType().pack(DONATION_SCRIPT) + pack.IntType(64).pack(0) + pack.VarStrType().pack('\x6a\x28' + pack.IntType(256).pack(0) + pack.IntType(64).pack(0))[:3]
+    gentx_before_refhash = pack.VarStrType().pack(DONATION_SCRIPT) + pack.IntType(64).pack(0) + pack.VarStrType().pack(b'\x6a\x28' + pack.IntType(256).pack(0) + pack.IntType(64).pack(0))[:3]
 
     @classmethod
     def get_dynamic_types(cls, net):
@@ -769,7 +769,7 @@ class ShareStore(object):
             if share.hash in share_hashes:
                 break
         else:
-            filename = self._add_line("%i %s" % (5, share_type.pack(share.as_share()).encode('hex')))
+            filename = self._add_line("%i %s" % (5, share_type.pack(share.as_share()).hex()))
             share_hashes, verified_hashes = self.known.setdefault(filename, (set(), set()))
             share_hashes.add(share.hash)
         share_hashes, verified_hashes = self.known_desired.setdefault(filename, (set(), set()))

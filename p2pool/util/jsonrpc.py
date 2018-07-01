@@ -105,10 +105,12 @@ def _http_do(url, headers, timeout, method, params):
     id_ = 0
 
     try:
+        headers=dict(headers, **{'Content-Type': 'application/json'})
+        headers = {k.encode():headers[k].encode() for k in headers.keys()}
         data = yield client.getPage(
             url=url,
-            method='POST',
-            headers=dict(headers, **{'Content-Type': 'application/json'}),
+            method=b'POST',
+            headers=headers,
             postdata=json.dumps({
                 'jsonrpc': '2.0',
                 'method': method,

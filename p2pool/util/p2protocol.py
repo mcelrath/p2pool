@@ -28,11 +28,11 @@ class Protocol(protocol.Protocol):
 
     def dataReceiver(self):
         while True:
-            start = ''
+            start = b''
             while start != self._message_prefix:
                 start = (start + (yield 1))[-len(self._message_prefix):]
 
-            command = (yield 12).rstrip('\0')
+            command = (yield 12).rstrip(b'\0')
             length, = struct.unpack('<I', (yield 4))
             if length > self._max_payload_length:
                 print('length too large')
@@ -41,13 +41,13 @@ class Protocol(protocol.Protocol):
             payload = yield length
 
             if hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4] != checksum:
-                print('invalid hash for', self.transport.getPeer().host, repr(command), length, checksum.encode('hex'))
+                print('invalid hash for', self.transport.getPeer().host, repr(command), length, checksum.hex())
                 if p2pool.DEBUG:
-                    print(hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4].encode('hex'), payload.encode('hex'))
+                    print(hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4].encode('hex'), payload.hex())
                 self.badPeerHappened()
                 continue
 
-            type_ = getattr(self, 'message_' + command, None)
+            type_ = getattr(self, 'message_' + command.decode(), None)
             if type_ is None:
                 if p2pool.DEBUG:
                     print('no type for', repr(command))
@@ -56,12 +56,12 @@ class Protocol(protocol.Protocol):
             try:
                 self.packetReceived(command, type_.unpack(payload, self.ignore_trailing_payload))
             except:
-                print('RECV', command, payload[:100].encode('hex') + ('...' if len(payload) > 100 else ''))
+                print('RECV', command, payload[:100].hex() + ('...' if len(payload) > 100 else ''))
                 log.err(None, 'Error handling message: (see RECV line)')
                 self.disconnect()
 
     def packetReceived(self, command, payload2):
-        handler = getattr(self, 'handle_' + command, None)
+        handler = getattr(self, 'handle_' + command.decode(), None)
         if handler is None:
             if p2pool.DEBUG:
                 print('no handler for', repr(command))
@@ -87,11 +87,10 @@ class Protocol(protocol.Protocol):
         type_ = getattr(self, 'message_' + command, None)
         if type_ is None:
             raise ValueError('invalid command')
-        #print 'SEND', command, repr(payload2)[:500]
         payload = type_.pack(payload2)
         if len(payload) > self._max_payload_length:
             raise TooLong('payload too long')
-        data = self._message_prefix + struct.pack('<12sI', command.encode(encoding='utf-8'), len(payload)) + hashlib.sha256(hashlib.sha256(payload.encode(encoding='utf-8')).digest()).digest()[:4] + payload.encode(encoding='utf-8')
+        data = self._message_prefix + struct.pack('<12sI', command.encode(encoding='utf-8'), len(payload)) + hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4] + payload
         #data = "3c31327349"
         self.traffic_happened.happened('p2p/out', len(data))
         #print("WATCH THIS", type(data))

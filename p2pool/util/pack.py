@@ -54,13 +54,13 @@ class Type(object):
         f = self.write(None, obj)
         res = []
         while f is not None:
-            if (isinstance(f[1], bytes)):
-                res.append(f[1].hex())
+            if (isinstance(f[1], str)):
+                res.append(f[1].encode('utf-8'))
             else:
                 res.append(f[1])
             f = f[0]
         res.reverse()
-        return ''.join(res)
+        return b''.join(res)
 
 
     def unpack(self, data, ignore_trailing=False):
@@ -250,7 +250,7 @@ class IPV6AddressType(Type):
         data, file = read(file, 16)
         if data[:12] == bytes.fromhex('00000000000000000000ffff'):
             return '.'.join(str(ord(x)) for x in data[12:]), file
-        return ':'.join(data[i*2:(i+1)*2].encode('hex') for i in range(8)), file
+        return ':'.join(data[i*2:(i+1)*2].hex() for i in range(8)), file
 
     def write(self, file, item):
         if ':' in item:

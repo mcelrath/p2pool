@@ -23,7 +23,7 @@ def fragment(f, **kwargs):
         fragment(f, **dict((k, v[len(v)//2:]) for k, v in kwargs.items()))
 
 class Protocol(p2protocol.Protocol):
-    VERSION = 1700
+    VERSION = 60002
 
     max_remembered_txs_size = 2500000
 
